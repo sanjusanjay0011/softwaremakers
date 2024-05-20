@@ -13,8 +13,19 @@ pipeline {
         }
         stage (deploy) {
             steps {
-                deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://13.232.127.170:8080/')], contextPath: 'vamsi', war: '**/*.war'
+                deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://localhost:8088')], contextPath: 'vamsi', war: '**/*.war'
             }
+        }
+        node {
+            stage('SCM') {
+            checkout scm
+          }
+          stage('SonarQube Analysis') {
+            def mvn = tool 'Default Maven';
+            withSonarQubeEnv() {
+              sh "${mvn}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=commit-hooks -Dsonar.projectName='commit-hooks'"
+            }
+          }
         }
     }
 }
